@@ -9,9 +9,10 @@ lazy val root = (project in file(".")).
 
 // Project dependencies
 libraryDependencies ++= {
-  val cassandraDriverV = "3.1.0"
-
   Seq(
-    "com.datastax.cassandra" % "cassandra-driver-core" % cassandraDriverV
+    "com.typesafe" % "config" % "1.3.0",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.4.0",
+    "ch.qos.logback" %  "logback-classic" % "1.1.7",
+    "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.0"
   )
 }
