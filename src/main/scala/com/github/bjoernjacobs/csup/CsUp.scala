@@ -2,7 +2,7 @@ package com.github.bjoernjacobs.csup
 
 import java.io.File
 
-import akka.actor.{ActorSystem, PoisonPill, Props}
+import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
