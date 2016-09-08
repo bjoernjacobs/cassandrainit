@@ -13,7 +13,7 @@ import scala.util.{Failure, Success}
 import com.github.bjoernjacobs.csup.CsUp
 
 object MyApp extends App {
-  implicit val ec = scala.concurrent.ExecutionContext.global`
+  implicit val ec = scala.concurrent.ExecutionContext.global
   
   CsUp().init().onComplete({
     case Success(_) => startUp() // start up your application
