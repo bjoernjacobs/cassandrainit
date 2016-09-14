@@ -7,17 +7,23 @@ The main use-case of this is when you have an application in a Docker container 
 Configure your environment using your own `application.conf` and `cassandra_init_statements.conf`.
 
 ```
-package com.mypackage
+package com.github.bjoernjacobs.csup
 
+import monix.execution.Scheduler.Implicits.global
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}
-import com.github.bjoernjacobs.csup.CsUp
 
-object MyApp extends App {
-  implicit val ec = scala.concurrent.ExecutionContext.global
-  
-  CsUp().init().onComplete({
-    case Success(_) => startUp() // start up your application
+object Test extends App {
+  val init = CsUp().init()
+
+  init.onComplete({
+    case Success(cluster) => println(s"Everything cool, here is your cluster: ${cluster.getClusterName}")
     case Failure(ex) => ex.printStackTrace()
   })
+
+  Await.ready(init, Duration.Inf)
+  sys.exit()
 }
 ```
