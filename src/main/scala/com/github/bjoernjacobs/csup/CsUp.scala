@@ -124,10 +124,10 @@ class CsUp private(baseConfig: Option[Config] = None) extends StrictLogging {
 
     logger.info("Reading Cassandra connection configuration")
     val cassandraConf = CassandraConfig(
-      cassandraConfig.getString("contactpoint"),
+      cassandraConfig.getString("session.contactPoint"),
       cassandraConfig.getString("keyspace"),
-      cassandraConfig.getString("username"),
-      cassandraConfig.getString("password")
+      cassandraConfig.getString("session.credentials.0"),
+      cassandraConfig.getString("session.credentials.1")
     )
 
     CsUpConfig(cassandraConf, forceRecreateKeyspace, keyspaceNamePlaceholder, createKeyspaceStatement, statements, retryConnectionCount, retryConnectionInitWait, retryConnectionWaitFactorIncrease, overallInitializationTimeout)
