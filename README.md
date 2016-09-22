@@ -16,7 +16,7 @@ import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}
 
 object Test extends App {
-  val init = CsUp().init()
+  val init = CsUp().initGetCluster()
 
   init.onComplete({
     case Success(cluster) => println(s"Everything cool, here is your cluster: ${cluster.getClusterName}")

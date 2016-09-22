@@ -2,7 +2,7 @@ package com.github.bjoernjacobs.csup
 
 import java.io.File
 
-import com.datastax.driver.core.{Cluster, Session}
+import com.datastax.driver.core.{Cluster, Session, SocketOptions}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
 import monix.eval.Task
@@ -17,7 +17,11 @@ import monix.execution.Scheduler.Implicits.global
 class CsUp private(baseConfig: Option[Config] = None) extends StrictLogging {
   private val csUpConfig = loadCsUpConfig()
 
-  def init() = initTask.timeout(csUpConfig.overallInitializationTimeout).runAsync
+  private def initBaseTask = initTask.timeout(csUpConfig.overallInitializationTimeout)
+
+  def initGetCluster() = initBaseTask.runAsync
+
+  def init() = initBaseTask.flatMap(closeCluster).runAsync
 
   def initTask = {
     logger.info("initTask")
@@ -35,6 +39,7 @@ class CsUp private(baseConfig: Option[Config] = None) extends StrictLogging {
     val cluster = clusterBuilder
       .addContactPoint(csUpConfig.casConf.contactPoint)
       .withCredentials(csUpConfig.casConf.username, csUpConfig.casConf.password)
+      .withSocketOptions(new SocketOptions().setConnectTimeoutMillis(30000))
       .build()
     val session = cluster.connect()
     Init(cluster, session)
@@ -48,11 +53,11 @@ class CsUp private(baseConfig: Option[Config] = None) extends StrictLogging {
     if (csUpConfig.forceRecreateKeyspace) {
       logger.info("Dropping keyspace if exists")
       session.execute(s"DROP KEYSPACE IF EXISTS ${csUpConfig.casConf.keyspace};")
-    }
 
-    logger.info("Creating keyspace")
-    val createKeyspaceStatement = csUpConfig.createKeyspaceStatement.replaceAllLiterally(csUpConfig.keyspaceNamePlaceholder, csUpConfig.casConf.keyspace)
-    session.execute(createKeyspaceStatement)
+      logger.info("Creating keyspace")
+      val createKeyspaceStatement = csUpConfig.createKeyspaceStatement.replaceAllLiterally(csUpConfig.keyspaceNamePlaceholder, csUpConfig.casConf.keyspace)
+      session.execute(createKeyspaceStatement)
+    }
 
     logger.info("Selecting keyspace")
     session.execute(s"USE ${csUpConfig.casConf.keyspace};")
@@ -63,7 +68,15 @@ class CsUp private(baseConfig: Option[Config] = None) extends StrictLogging {
       session.execute(stmtUpdated)
     })
 
+    logger.info("Closing session")
+    session.close()
+
     cluster
+  }
+
+  def closeCluster(cluster: Cluster): Task[Unit] = Task {
+    logger.info("Closing cluster")
+    cluster.close()
   }
 
   def retryBackoff[A](source: Task[A], maxRetries: Int, firstDelay: FiniteDuration, delayIncreaseFactor: Double): Task[A] = {
