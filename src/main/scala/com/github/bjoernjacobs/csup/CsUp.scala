@@ -39,7 +39,7 @@ class CsUp private(baseConfig: Option[Config] = None) extends StrictLogging {
     val cluster = clusterBuilder
       .addContactPoint(csUpConfig.casConf.contactPoint)
       .withCredentials(csUpConfig.casConf.username, csUpConfig.casConf.password)
-      .withSocketOptions(new SocketOptions().setConnectTimeoutMillis(30000))
+      .withSocketOptions(new SocketOptions().setConnectTimeoutMillis(120000).setReadTimeoutMillis(120000))
       .build()
     val session = cluster.connect()
     Init(cluster, session)
