@@ -6,8 +6,9 @@ import com.datastax.driver.core.{Cluster, Session, SocketOptions}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
 import monix.eval.Task
+import monix.execution.CancelableFuture
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import monix.execution.Scheduler.Implicits.global
 
@@ -19,11 +20,11 @@ class CsUp private(baseConfig: Option[Config] = None) extends StrictLogging {
 
   private def initBaseTask = initTask.timeout(csUpConfig.overallInitializationTimeout)
 
-  def initGetCluster() = initBaseTask.runAsync
+  def initGetCluster(): CancelableFuture[Cluster] = initBaseTask.runAsync
 
-  def init() = initBaseTask.flatMap(closeCluster).runAsync
+  def init(): CancelableFuture[Unit] = initBaseTask.flatMap(closeCluster).runAsync
 
-  def initTask = {
+  def initTask: Task[Cluster] = {
     logger.info("initTask")
     retryBackoff(
       acquireSession,
@@ -95,7 +96,7 @@ class CsUp private(baseConfig: Option[Config] = None) extends StrictLogging {
 
   case class Init(cluster: Cluster, session: Session)
 
-  def loadCsUpConfig() = {
+  def loadCsUpConfig(): CsUpConfig = {
     logger.info("Reading configuration")
     val config = baseConfig.getOrElse(ConfigFactory.load())
     val csUpConfig = config.getConfig("csup")
@@ -132,7 +133,7 @@ class CsUp private(baseConfig: Option[Config] = None) extends StrictLogging {
     }
 
     val createKeyspaceStatement = initConfig.getString("create-keyspace-statement")
-    val statements = initConfig.getStringList("create-statements").toList
+    val statements = initConfig.getStringList("create-statements").asScala.toList
     logger.info(s"Found one keyspace creation statement and ${statements.size} other create statements")
 
     logger.info("Reading Cassandra connection configuration")

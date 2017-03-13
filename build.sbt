@@ -3,9 +3,11 @@ lazy val root = (project in file(".")).
   settings(
     name := "csup",
     organization := "com.github.bjoernjacobs",
-    version := "0.0.6-SNAPSHOT",
+    version := "0.0.6",
     scalaVersion := "2.12.1"
   )
+
+crossScalaVersions := Seq("2.11.8", "2.12.1")
 
 // Project dependencies
 libraryDependencies ++= {
@@ -13,7 +15,6 @@ libraryDependencies ++= {
     "com.typesafe" % "config" % "1.3.1",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
     "io.monix" %% "monix" % "2.2.2",
-    //"ch.qos.logback" %  "logback-classic" % "1.1.7",
     "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.4"
   )
 }
